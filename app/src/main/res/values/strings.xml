@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RandomJokes</string>
+    <string name="text_sample">A day without laughter is a day wasted</string>
+    <string name="btn_guess_label">Lets Begin</string>
+</resources>
