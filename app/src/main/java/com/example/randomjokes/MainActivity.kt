@@ -2,65 +2,44 @@ package com.example.randomjokes
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.liveData
 import com.bumptech.glide.Glide
-import com.example.randomjokes.data.network.JokeAPIService
-import com.example.randomjokes.data.network.RetrofitInstance
-import com.example.randomjokes.data.response.JokeResponse
 import com.example.randomjokes.databinding.ActivityMainBinding
-import retrofit2.Response
-import retrofit2.Retrofit
-
+import com.example.randomjokes.ui.JokeViewModel
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var retService: JokeAPIService
     private var isSelected = false
     private lateinit var punchLine: String
 
-
+    private lateinit var viewModel: JokeViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding= ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val myApplication = application as MyApplication
+        viewModel = JokeViewModel(myApplication.appContainer.jokeRepo)
+
         Glide.with(this).load(R.drawable.laugh_gif).into(binding.imageView)
-
-        retService= RetrofitInstance.getRetrofitInstance().create(JokeAPIService::class.java)
-
 
         binding.btnGuess.setOnClickListener {
             if(isSelected){
-                binding.btnGuess.text ="Once Again!"
+                binding.btnGuess.text = resources.getText(R.string.label_once_again)
                 binding.tvJokeQuestion.text= punchLine
                 isSelected=false
 
             }else{
-                getJokes()
+                viewModel.getRandomJoke()
                 isSelected=true
-                binding.btnGuess.text ="Guess!"
+                binding.btnGuess.text =resources.getText(R.string.label_guess)
             }
         }
 
-    }
-
-    private fun getJokes() {
-        val responseLiveData:LiveData<Response<JokeResponse>> = liveData {
-            val response= retService.getJokes()
-            emit(response)
-        }
-
-        responseLiveData.observe(this, Observer {
-            val data= it.body()
-            if(data!=null){
-                binding.tvJokeQuestion.text = data.setup
-                punchLine=data.punchline
-
-            }
-
-
+        viewModel.joke.observe(this, Observer {
+          joke->binding.tvJokeQuestion.text= joke.body()?.setup
+            punchLine= joke.body()?.punchline.toString()
         })
+
     }
 }
